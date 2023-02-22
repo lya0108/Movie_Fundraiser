@@ -1,4 +1,6 @@
 # functions
+
+# checks that choice is within choosen list
 def choice_checker(question, valid_list, error):
 
     valid = False
@@ -15,6 +17,31 @@ def choice_checker(question, valid_list, error):
         print(error)
         print()
 
+# lists
 maybe = ["yes", "no"]
 
-intro = choice_checker("Do You Want To ")
+# set constants
+tickets_sold = 0
+ticket_num = 3
+
+# ask if instructions display
+intro = choice_checker("Do You Want To Read Instructions: ", maybe, "Please Enter Yes or No")
+
+if intro == "yes":
+    print("Blab Blah Bloh")
+    
+while tickets_sold < ticket_num:
+    ask_name = input("Please Enter Your Name or 'xxx' to quit: ")
+  
+    if ask_name == "xxx":
+        break
+
+    elif ask_name != "":
+        name = ask_name
+
+    else:
+        print("Name?")
+
+
+
+
