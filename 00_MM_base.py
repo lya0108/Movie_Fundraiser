@@ -84,8 +84,6 @@ if intro == "yes":
     
 while tickets_sold < ticket_num:
     ask_name = input("Please Enter Your Name or 'xxx' to quit: ")
-    
-    tickets_sold += 1
 
     if ask_name == "xxx":
         break
@@ -98,11 +96,17 @@ while tickets_sold < ticket_num:
     
     age = boundary_check("Hi {} Please Enter Your Age: ".format(name), 0, None, None, None)
     
-    if 12 <= age:
+    if 12 <= age <= 120:
+        tickets_sold += 1
         pass
     
     elif age < 12:
         print("Sorry Your Too Young")
+
+    else:
+        print("???????")
+    
+    
 
 tickets_total = ticket_num - tickets_sold
 print("You Have Sold {} Ticket/s. You Have {} Ticket/s Remaining".format(tickets_sold, tickets_total))
