@@ -1,24 +1,42 @@
+import pandas as pd
+import random as rd
+from datetime import date
+
 # functions
 
-# checks that choice is within choosen list
-def choice_checker(question, valid_list, error):
+# checks input is not blank
+def not_blank(question):
+    while True:
+        response = input(question)
 
-    valid = False
-    while not valid:
+        if response != "":
+            return response
+        else:
+            print("This can't be blank.")
+
+# rounds a number to 2 decimal places
+def currency(x):
+    
+    return "${:.2f}".format(x)
+
+# checks that choice is within choosen list
+def choice_checker(question, valid_list, error, num_letters):
+
+    while True:
         
         # asks user for choice
         response = input(question).lower()
 
         # checks if input is in list
         for item in valid_list:
-            if response == item[0] or response == item:
+            if response == item[:num_letters] or response == item:
                 return item
         
         print(error)
         print()
 
-# checks 
-def boundary_check(question, low=None, high=None, exit_code = None, decimal = None):
+# checks input is a number, if it is within set boundaries, if the input is the exit string, and if the number is a decimal.
+def num_check(question, low=None, high=None, exit_code = None, decimal = None):
 
     situation = ""
 
@@ -41,7 +59,7 @@ def boundary_check(question, low=None, high=None, exit_code = None, decimal = No
                 return response
 
             except ValueError:
-                print("Please Enter An Number")
+                print("Please Enter A Number")
 
         else:
             try:
@@ -69,32 +87,72 @@ def boundary_check(question, low=None, high=None, exit_code = None, decimal = No
                     print("Please Enter an Integer (ie: A Number That Does Not Have An Decimal)")
                 continue
 
+# calculates ticket cost based on age
+def ticket_price(yrs_old):
+    global ticket_cost
+
+    if yrs_old < 12:
+        ticket_cost = 0
+
+    elif 12 <= yrs_old < 16:
+        ticket_cost = 7.50
+
+    elif 16 <= yrs_old < 65:
+        ticket_cost = 10.50
+
+    elif 65 <= yrs_old <= 120 :
+        ticket_cost = 6.50
+    
+    else:
+        ticket_cost = 0
+
+    return ticket_cost
+
+# Instructions
+def instructions():
+    print("\nFor Each Ticket\nEnter The Person's Name\nThen Enter Their Age\nThen Enter A Payment Method")
+
 # lists
 maybe = ["yes", "no"]
+cash_credit = ["cash", "credit"]
+
+all_names = []
+all_ages = []
+all_ticket_costs = []
+surcharge_list = []
+
+# dictionary
+mini_movie_dict = {
+    "Name": all_names,
+    "Age": all_ages,
+    "Ticket Price": all_ticket_costs,
+    "Surcharge": surcharge_list
+}
 
 # set constants
 tickets_sold = 0
-ticket_num = 3
+tickets_total = 50
 
-# ask if instructions display
-intro = choice_checker("Do You Want To Read Instructions: ", maybe, "Please Enter Yes or No")
-
+# ask if instructions display, if yes show instructions
+intro = choice_checker("Do You Want To Read Instructions: ", maybe, "Please Enter Yes or No", 1)
 if intro == "yes":
-    print("Blab Blah Bloh")
-    
-while tickets_sold < ticket_num:
-    ask_name = input("Please Enter Your Name or 'xxx' to quit: ")
+    instructions()
+print()
 
-    if ask_name == "xxx":
+# start of loop    
+while tickets_sold < tickets_total:
+    
+    # asks for users name
+    ask_name = not_blank("Please Enter Your Name or 'xxx' to quit: ")
+
+    # exit code
+    if ask_name == "xxx" and len(all_names) > 0:
         break
-
-    elif ask_name != "":
-        name = ask_name
-
-    else:
-        print("Name?")
+    elif ask_name =="xxx":
+        print("You Need To Sell At Least 1 Ticket Before Quitting")
     
-    age = boundary_check("Hi {} Please Enter Your Age: ".format(name), 0, None, None, None)
+    # asks user for age
+    age = num_check(f"Hi {ask_name} Please Enter Your Age: ", 0, None, None, None)
     
     if 12 <= age <= 120:
         tickets_sold += 1
@@ -104,13 +162,92 @@ while tickets_sold < ticket_num:
         print("Sorry Your Too Young")
 
     else:
-        print("???????")
+        print("HAHAHAHAHA SO FUNNY")
     
-    
+    # calculate price of ticket, if too young no ticket
+    ticket_price(age)
+    if ticket_cost == 0:
+        print(f"Age: {age} No Ticket")
 
-tickets_total = ticket_num - tickets_sold
-print("You Have Sold {} Ticket/s. You Have {} Ticket/s Remaining".format(tickets_sold, tickets_total))
+    else:
+        print(f"Age: {age} Ticket: ${ticket_cost}")
 
+        # checks payment method (cash or credit)
+        pay_method = choice_checker("How Would You Like To Pay \n(credit surcharge 5%): ", cash_credit, "Please Choose A Valid Payment Method", 2)
+        print(pay_method)
+        
+        if pay_method == "credit":
+            surcharge = ticket_cost * 0.05
+        
+        else:
+            surcharge = 0
+        
+        all_names.append(ask_name)
+        all_ages.append(age)
+        all_ticket_costs.append(ticket_cost)
+        surcharge_list.append(surcharge)
+        
+mini_movie_frame = pd.DataFrame(mini_movie_dict)
+mini_movie_frame = mini_movie_frame.set_index("Name")
 
+# calculate ticket cost
+mini_movie_frame["Total"] = mini_movie_frame["Surcharge"] + mini_movie_frame["Ticket Price"]
 
+# calculate profit for each ticket
+mini_movie_frame["Profit"] = mini_movie_frame["Ticket Price"] - 5
 
+# calculate ticket/profit total
+total = mini_movie_frame["Total"].sum()
+profit = mini_movie_frame["Profit"].sum()
+
+# get today's date
+today = date.today()
+
+# get day/month/year as individual strings
+day = today.strftime("%d")
+month = today.strftime("%m")
+year = today.strftime("%y")
+
+heading = f"=== Mini Movie Fundraiser Ticket Data {day}/{month}/{year} ===\n"
+filename = f"MMF_{year}_{month}_{day}"
+
+add_dollars = ["Ticket Price", "Surcharge", "Total", "Profit"]
+for var_item in add_dollars:
+    mini_movie_frame[var_item] = mini_movie_frame[var_item].apply(currency)
+
+# change frame to string so it can be exported
+mini_movie_string = pd.DataFrame.to_string(mini_movie_frame)
+
+ticket_cost_heading = "\n===== Ticket Cost/Profit ====="
+total_ticket_sales = "Total Ticket sales: ${:.2f}".format(total)
+total_profit = "Total Profit: ${:.2f}\n".format(profit)
+
+# choose a raffle winner
+raffle_winner = rd.choice(all_names)
+winner_heading = "\n=== Raffle Winner ==="
+winner_text = f"Congrats [{raffle_winner}]. You Have Won The Raffle i.e Your Ticket is free!\n"
+
+# prints amount of tickets sold/remaining
+tickets_remaining = tickets_total - tickets_sold
+if tickets_remaining == 0:
+    sold_status = "Congrats You Have Sold All Tickets"
+else:
+    sold_status = f"You Have Sold {tickets_sold} Ticket/s. You Have {tickets_remaining} Ticket/s Remaining"
+
+to_write = [heading, mini_movie_string, ticket_cost_heading, total_ticket_sales, total_profit, sold_status, winner_heading, winner_text]
+
+# print output
+for item in to_write:
+    print(item)
+
+# write output to file
+# create file to hold data (add .txt)
+write_to = f"{filename}.txt"
+text_file = open(write_to, "w+")
+
+for item in to_write:
+    text_file.write(item)
+    text_file.write("\n")
+
+# close file
+text_file.close()
